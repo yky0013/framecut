@@ -1,0 +1,80 @@
+name: Release Windows
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: windows-latest
+    timeout-minutes: 45
+
+    steps:
+      - name: Check out source and LFS files
+        uses: actions/checkout@v6
+        with:
+          lfs: true
+
+      - name: Verify tag matches package version
+        shell: pwsh
+        run: |
+          $version = (Get-Content -LiteralPath package.json -Raw | ConvertFrom-Json).version
+          if ($env:GITHUB_REF_NAME -ne "v$version") {
+            throw "Tag $env:GITHUB_REF_NAME does not match package version v$version."
+          }
+
+      - name: Verify bundled Whisper weights
+        shell: pwsh
+        run: |
+          $models = @(Get-ChildItem -LiteralPath models -Recurse -Filter *.onnx)
+          $totalBytes = ($models | Measure-Object -Property Length -Sum).Sum
+          if ($models.Count -lt 2 -or $totalBytes -lt 70000000) {
+            throw "Whisper ONNX files are missing or are still Git LFS pointers."
+          }
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run checks
+        run: npm run check
+
+      - name: Build Windows installer
+        run: npm run dist
+
+      - name: Create SHA-256 checksum
+        shell: pwsh
+        run: |
+          $installer = Get-ChildItem -LiteralPath release -Filter 'FrameCut Setup *.exe' |
+            Sort-Object LastWriteTime -Descending |
+            Select-Object -First 1
+          if (-not $installer) {
+            throw "FrameCut installer was not generated."
+          }
+          $hash = (Get-FileHash -LiteralPath $installer.FullName -Algorithm SHA256).Hash.ToLowerInvariant()
+          "$hash  $($installer.Name)" | Set-Content -LiteralPath release/SHA256SUMS.txt -Encoding ascii
+
+      - name: Publish GitHub prerelease
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $installer = Get-ChildItem -LiteralPath release -Filter 'FrameCut Setup *.exe' |
+            Sort-Object LastWriteTime -Descending |
+            Select-Object -First 1
+          gh release create $env:GITHUB_REF_NAME `
+            $installer.FullName `
+            "release/SHA256SUMS.txt" `
+            --title "FrameCut $env:GITHUB_REF_NAME" `
+            --generate-notes `
+            --verify-tag `
+            --prerelease

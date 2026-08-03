@@ -1,0 +1,68 @@
+{
+  "name": "framecut",
+  "version": "0.3.0",
+  "private": true,
+  "description": "A focused desktop video editor with effects, templates, and offline speech-to-subtitle support.",
+  "author": "FrameCut contributors",
+  "license": "UNLICENSED",
+  "keywords": [
+    "electron",
+    "video-editor",
+    "whisper",
+    "offline-transcription",
+    "ffmpeg"
+  ],
+  "engines": {
+    "node": ">=22 <25"
+  },
+  "main": "electron/main.cjs",
+  "scripts": {
+    "dev": "concurrently -k \"vite\" \"wait-on http://127.0.0.1:5173 && electron . --dev\"",
+    "build": "vite build",
+    "check": "node --check electron/main.cjs && node --check electron/preload.cjs && node --check electron/transcribe-worker.cjs && npm run build",
+    "start": "electron .",
+    "dist": "npm run build && electron-builder --win nsis"
+  },
+  "dependencies": {
+    "@huggingface/transformers": "^3.8.1",
+    "ffmpeg-static": "^5.2.0",
+    "lucide-react": "^0.468.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^4.3.4",
+    "concurrently": "^9.1.2",
+    "electron": "^33.2.1",
+    "electron-builder": "^25.1.8",
+    "vite": "^6.0.5",
+    "wait-on": "^8.0.1"
+  },
+  "build": {
+    "appId": "com.framecut.desktop",
+    "productName": "FrameCut",
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "dist/**/*",
+      "electron/**/*",
+      "models/**/*",
+      "package.json"
+    ],
+    "asarUnpack": [
+      "node_modules/ffmpeg-static/**/*",
+      "node_modules/onnxruntime-node/**/*",
+      "node_modules/sharp/**/*",
+      "models/**/*"
+    ],
+    "win": {
+      "target": "nsis",
+      "signAndEditExecutable": false
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true
+    }
+  }
+}
