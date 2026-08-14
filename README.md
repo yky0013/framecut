@@ -87,4 +87,4 @@ FrameCut 不需要账号。视频、音频和 Whisper 推理均保留在本机�
 
 ## 许可证
 
-项目代码目前标记为 UNLICENSED，尚未授予公开复制、修改或再分发许可。准备公开仓库前，请由仓库所有者选择合适的代码许可证。第三方组件与模型保留各自许可证，详见 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)。
+本项目采用 [MIT License](LICENSE)。第三方组件与模型保留各自许可证，详见 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)。
