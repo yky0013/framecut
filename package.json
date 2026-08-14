@@ -4,7 +4,7 @@
   "private": true,
   "description": "A focused desktop video editor with effects, templates, and offline speech-to-subtitle support.",
   "author": "FrameCut contributors",
-  "license": "UNLICENSED",
+  "license": "MIT",
   "keywords": [
     "electron",
     "video-editor",
